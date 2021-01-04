@@ -1,0 +1,44 @@
+.anchor {
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
+.space-between {
+  justify-content: space-between;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.center {
+  justify-content: center;
+}
+
+.root-mt {
+  margin-top: 90px;
+}
+
+.link-text {
+  color: #f44336;
+  text-decoration: none;
+}
+
+.link-text:hover {
+  text-decoration: underline;
+}
+
+.MuiAlert-root {
+  display: flex; 
+  justify-content: center;
+}
