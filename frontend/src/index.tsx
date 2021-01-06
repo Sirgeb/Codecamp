@@ -1,11 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
+import { ApolloProvider } from '@apollo/client';
+import CssBaseline from '@material-ui/core/CssBaseline';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
+import { AppContext, useMode } from './hooks';
+import { client } from './lib';
 import 'fontsource-roboto'
 import App from './App';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import { AppContext, useMode } from './hooks';
 import './index.css';
 
 const AppWithTheme = () => {
@@ -36,8 +38,10 @@ const AppWithTheme = () => {
 }
 
 ReactDOM.render(
-  <AppContext>
-    <AppWithTheme />
-  </AppContext>,
+  <ApolloProvider client={client}>
+    <AppContext>
+      <AppWithTheme />
+    </AppContext>
+  </ApolloProvider>,
   document.getElementById('root')
 );

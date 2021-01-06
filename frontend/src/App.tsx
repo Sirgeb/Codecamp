@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom';
 import Container from '@material-ui/core/Container';
-import { Navigation } from './components/Navigation';
+import { Navigation } from './components';
 import {
   BootcampPage, 
   BootcampsPage, 
