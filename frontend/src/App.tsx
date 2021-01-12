@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useMutation } from '@apollo/client';
 import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom';
 import Container from '@material-ui/core/Container';
+import { signInWithCookies as SignInData } from './lib/graphql/mutations/SignInWithCookies/__generated__/signInWithCookies';
+import { SIGN_IN_WITH_COOKIES } from './lib/graphql/mutations';
 import { Navigation } from './components';
+import { useSetLoggedInUserId, useLoggedInUserId } from './hooks';
 import {
-  BootcampPage, 
+  BootcampPage,
   BootcampsPage, 
   HomePage, 
   ForgotPasswordPage,
@@ -15,24 +19,67 @@ import {
   ProfilePage
 } from './pages';
 
+const LoggedInRoutes = () => (
+  <Switch>
+    <Route exact path="/" component={HomePage} />
+    <Route exact path="/bootcamp" component={BootcampPage} />
+    <Route exact path="/bootcamps" component={BootcampsPage} />
+    <Route exact path="/bootcamp-application-form" component={BootcampApplicationFormPage} />
+    <Route exact path="/search" component={SearchPage} />
+    <Route exact path="/profile" component={ProfilePage} />
+    <Redirect from="*" to="/" />
+  </Switch>
+);
+
+const LoggedOutRoutes = () => (
+  <Switch>
+    <Route exact path="/" component={HomePage} />
+    <Route exact path="/bootcamp" component={BootcampPage} />
+    <Route exact path="/bootcamps" component={BootcampsPage} />
+    <Route exact path="/bootcamp-application-form" component={BootcampApplicationFormPage} />
+    <Route exact path="/search" component={SearchPage} />
+    <Route exact path="/signin" component={SignInPage} />
+    <Route exact path="/signup" component={SignUpPage} />
+    <Route exact path="/forgot-password" component={ForgotPasswordPage} />
+    <Route exact path="/change-password" component={ChangePasswordPage} />
+    <Redirect from="*" to="/" />
+  </Switch>
+);
+
 const App = () => {
+  const setLoggedInUserId = useSetLoggedInUserId();
+  const loggedInUserId = useLoggedInUserId();
+  const [signIn] = useMutation<SignInData>(SIGN_IN_WITH_COOKIES, {
+    onCompleted: (data) => {
+      if (data && data.signInWithCookies) {
+        setLoggedInUserId(data.signInWithCookies.id);
+        if (data.signInWithCookies.token) {
+          sessionStorage.setItem("token", data.signInWithCookies.token.toString() || " ");
+          console.log("logged in with cookies");
+        } else {
+          sessionStorage.removeItem("token");
+        }
+      }
+    }
+  });
+
+  const signInRef = useRef(signIn);
+
+  useEffect(() => {
+    signInRef.current();
+  }, []);
+
   return (
     <Router>
       <Navigation />
       <Container>
-        <Switch>
-          <Route exact path="/" component={HomePage} />
-          <Route exact path="/bootcamp" component={BootcampPage} />
-          <Route exact path="/bootcamps" component={BootcampsPage} />
-          <Route exact path="/bootcamp-application-form" component={BootcampApplicationFormPage} />
-          <Route exact path="/search" component={SearchPage} />
-          <Route exact path="/signin" component={SignInPage} />
-          <Route exact path="/signup" component={SignUpPage} />
-          <Route exact path="/profile" component={ProfilePage} />
-          <Route exact path="/forgot-password" component={ForgotPasswordPage} />
-          <Route exact path="/change-password" component={ChangePasswordPage} />
-          <Redirect from="*" to="/" />
-        </Switch>
+        {
+          loggedInUserId !== null ? (
+            <LoggedInRoutes />
+          ) : (
+            <LoggedOutRoutes />
+          )
+        }
       </Container>
     </Router>
   )

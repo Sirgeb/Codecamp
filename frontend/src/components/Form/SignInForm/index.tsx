@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useMutation } from '@apollo/client';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -10,12 +11,53 @@ import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import CodeIcon from '@material-ui/icons/Code';
 import google_icon from '../../../assets/google_logo.jpg';
-import { Copyright } from '../../Copyright';
+import { Backdroper, Copyright, Alert } from '../../../components';
+import { SIGN_IN_WITH_CREDENTIALS } from '../../../lib/graphql/mutations';
+import { signInWithCredentials as SignInData, signInWithCredentialsVariables as SignInVariables } from '../../../lib/graphql/mutations/SignIn/__generated__/signInWithCredentials';
+import { useSetLoggedInUserId } from '../../../hooks';
 
-interface Props {}
+const INITIAL_STATE = {
+  email: "",
+  password: ""
+}
 
 export const SignInForm = () => {
   const classes = useStyles();
+  const setLoggedInUserId = useSetLoggedInUserId();
+  const [user, setUser] = useState(INITIAL_STATE);
+  const [signIn, { loading, error }] = useMutation<SignInData, SignInVariables>(SIGN_IN_WITH_CREDENTIALS, {
+    onCompleted: (data) => {
+      if (data && data.signInWithCredentials) {
+        setLoggedInUserId(data.signInWithCredentials.id)
+        sessionStorage.setItem("token", data.signInWithCredentials.token);
+      } else {
+        sessionStorage.removeItem("token");
+      }
+    }
+  });
+
+  const handleChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+    const { value, name } = event.target;
+    setUser((prevState) => ({
+      ...prevState,
+      [name]: value
+    }));
+  }
+
+  const handleSubmit = async (event: React.SyntheticEvent) => {
+    event.preventDefault();
+    await signIn({
+      variables: {
+        input: {
+          ...user
+        }
+      }
+    })
+  }
+
+  const errorElement = error ? (
+    <Alert severity="error" message={error.message} state={true} />
+  ) : null;
 
   return (
     <Container component="main" maxWidth="xs">
@@ -27,7 +69,8 @@ export const SignInForm = () => {
         <Typography component="h1" variant="h5">
           Sign In
         </Typography>
-        <form className={classes.form} noValidate>
+        <form className={classes.form} noValidate onSubmit={handleSubmit}>
+          {errorElement}
           <TextField
             variant="outlined"
             margin="normal"
@@ -38,6 +81,7 @@ export const SignInForm = () => {
             name="email"
             autoComplete="email"
             autoFocus={true}
+            onChange={handleChange}
           />
           <TextField
             variant="outlined"
@@ -49,12 +93,14 @@ export const SignInForm = () => {
             type="password"
             id="password"
             autoComplete="current-password"
+            onChange={handleChange}
           />
           <Button
             type="submit"
             fullWidth
             variant="contained"
             color="primary"
+            disabled={loading}
             className={classes.submit}
           >
             Sign In
@@ -83,6 +129,7 @@ export const SignInForm = () => {
         </form>
       </div>
       <Copyright />
+      <Backdroper open={loading} />
     </Container>
   );
 }
@@ -91,7 +138,7 @@ const useStyles = makeStyles((theme) => ({
   paper: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
+    alignItems: 'center', 
   },
   avatar: {
     margin: theme.spacing(1),

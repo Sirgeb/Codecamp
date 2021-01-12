@@ -1,5 +1,6 @@
 import React from 'react';
-import { withRouter, Link, RouteComponentProps } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
+import { useMutation } from '@apollo/client';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import AppBar from '@material-ui/core/AppBar';
@@ -14,15 +15,32 @@ import Brightness7Icon from '@material-ui/icons/Brightness7';
 import Menu from '@material-ui/core/Menu';
 import SearchIcon from '@material-ui/icons/Search';
 import Brightness4Icon from '@material-ui/icons/Brightness4';
-import { useHandleLight, useMode } from '../../hooks';
+import { useHandleLight, useMode, useLoggedInUserId, useSetLoggedInUserId } from '../../hooks';
+import { SIGN_OUT } from '../../lib/graphql/mutations';
+import { signOut as SignOutData } from '../../lib/graphql/mutations/SignOut/__generated__/signOut';
 
-export const Navigation = withRouter(({ history }: RouteComponentProps) => {
+export const Navigation = () => {
   const classes = useStyles();
-  const [auth, setAuth] = React.useState(false);
+  const history = useHistory();
+  const loggedInUserId = useLoggedInUserId();
+  const setLoggedInUserId = useSetLoggedInUserId();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleLight = useHandleLight();
   const mode = useMode();
+  const [signOut] = useMutation<SignOutData>(SIGN_OUT, {
+    onCompleted: (data) => {
+      if (data && data.signOut) {
+        setLoggedInUserId(data.signOut);
+        sessionStorage.removeItem("token");
+      }
+    }
+  });
+
+  const handleSignOut = () => {
+    signOut();
+    window.location.href = "/";
+  }
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -40,7 +58,7 @@ export const Navigation = withRouter(({ history }: RouteComponentProps) => {
         <Container className={classes.nav}>
           <Link to="/" className="anchor">
             <Typography variant="h5" className={classes.title} color="secondary">
-              <div style={{ display: "flex", alignItems: "center"}}>
+              <div style={{ display: "flex", alignItems: "center" }}>
                 <CodeIcon color="secondary" fontSize="large"/> Codecamp
               </div>
             </Typography>
@@ -73,7 +91,7 @@ export const Navigation = withRouter(({ history }: RouteComponentProps) => {
               >
                 <AccountCircle color="secondary" fontSize="large"/>
               </IconButton>
-              {auth ? (
+              {loggedInUserId !== null ? (
                 <>
                   <Menu
                     color="secondary"
@@ -92,7 +110,7 @@ export const Navigation = withRouter(({ history }: RouteComponentProps) => {
                     onClose={handleLink}
                   >
                     <MenuItem onClick={() => handleLink('/profile')} color="secondary">Profile</MenuItem>
-                    <MenuItem onClick={() => handleLink('#')} color="secondary">Sign Out</MenuItem>
+                    <MenuItem onClick={handleSignOut} color="secondary">Sign Out</MenuItem>
                   </Menu>
                 </>
               ) : (
@@ -123,8 +141,7 @@ export const Navigation = withRouter(({ history }: RouteComponentProps) => {
       </AppBar>
     </div>
   );
-})
-
+}
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({

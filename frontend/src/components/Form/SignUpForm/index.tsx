@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useMutation } from '@apollo/client';
+import { Backdroper, Alert } from '../../../components';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -9,13 +11,59 @@ import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import CodeIcon from '@material-ui/icons/Code';
+import { SIGN_UP_WITH_CREDENTIALS } from '../../../lib/graphql/mutations';
+import { signUpWithCredentials as SignUpData, signUpWithCredentialsVariables as SignUpVariables } from '../../../lib/graphql/mutations/SignUp/__generated__/signUpWithCredentials';
 import google_icon from '../../../assets/google_logo.jpg';
 import { Copyright } from '../../Copyright';
+import { useSetLoggedInUserId } from '../../../hooks';
 
-interface Props {}
+const INITIAL_STATE = {
+  firstname: "",
+  lastname: "",
+  email: "",
+  password: ""
+}
 
 export const SignUpForm = () => {
   const classes = useStyles();
+  const setLoggedInUserId = useSetLoggedInUserId();
+  const [user, setUser] = useState(INITIAL_STATE);
+  const [signUp, { loading, error }] = useMutation<SignUpData, SignUpVariables>(SIGN_UP_WITH_CREDENTIALS, {
+    onCompleted: (data) => {
+      if (data && data.signUpWithCredentials) {
+        setLoggedInUserId(data.signUpWithCredentials.id)
+        sessionStorage.setItem("token", data.signUpWithCredentials.token);
+      } else {
+        sessionStorage.removeItem("token");
+      }
+    }
+  });
+
+  const handleChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+    const { value, name } = event.target;
+    setUser((prevState) => ({
+      ...prevState,
+      [name]: value
+    }));
+  }
+
+  const handleSubmit = async (event: React.SyntheticEvent) => {
+    event.preventDefault();
+    await signUp({
+      variables: {
+        input: {
+          ...user
+        }
+      }
+    })
+  }
+
+  const errorElement = error ? (
+    <>
+      <Alert severity="error" message={error.message} state={true} />
+      <br />
+    </>
+  ) : null;
 
   return (
     <Container component="main" maxWidth="xs">
@@ -27,18 +75,19 @@ export const SignUpForm = () => {
         <Typography component="h1" variant="h5">
           Sign Up
         </Typography>
-        <form className={classes.form} noValidate>
+        <form className={classes.form} noValidate onSubmit={handleSubmit}>
+          {errorElement} 
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField
-                autoComplete="fname"
-                name="firstName"
+                name="firstname"
                 variant="outlined"
                 required
                 fullWidth
-                id="firstName"
+                id="firstname"
                 label="First Name"
                 autoFocus={true}
+                onChange={handleChange}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -46,10 +95,10 @@ export const SignUpForm = () => {
                 variant="outlined"
                 required
                 fullWidth
-                id="lastName"
+                id="lastname"
                 label="Last Name"
-                name="lastName"
-                autoComplete="lname"
+                name="lastname"
+                onChange={handleChange}
               />
             </Grid>
           </Grid>
@@ -61,7 +110,7 @@ export const SignUpForm = () => {
             id="email"
             label="Email Address"
             name="email"
-            autoComplete="email"
+            onChange={handleChange}
           />
           <TextField
             variant="outlined"
@@ -72,13 +121,14 @@ export const SignUpForm = () => {
             label="Password"
             type="password"
             id="password"
-            autoComplete="current-password"
+            onChange={handleChange}
           />
           <Button
             type="submit"
             fullWidth
             variant="contained"
             color="primary"
+            disabled={loading}
             className={classes.submit}
           >
             Sign Up
@@ -107,6 +157,7 @@ export const SignUpForm = () => {
         </form>
       </div>
       <Copyright />
+      <Backdroper open={loading} />
     </Container>
   );
 }
