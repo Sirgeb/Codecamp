@@ -18,10 +18,11 @@ export const Breadcrumb = withRouter(({ history, routes }: RouteComponentProps &
         icon={<HomeIcon fontSize="small" />}
         onClick={() => history.push('/')}
       />
-      {routes.map(route => (
+      {routes.map((route, index) => (
         <StyledBreadcrumb 
           component="a" 
           label={route.name}
+          key={index}
           onClick={() => history.push(route.path as string)}
         />
       ))}

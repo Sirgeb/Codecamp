@@ -4,11 +4,21 @@ import crypto from "crypto";
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import { Database, User, UserCredentials } from '../../../lib/types';
-import { SignUpArgs, SignInArgs, UserArgs } from './types';
+import { SignUpArgs, SignInArgs, UserArgs, GoogleAuthInput, GoogleAuthCode } from './types';
 import { cookieOptions, authorize, logInViaCookie } from '../../../lib/utils';
+import { Google } from '../../../lib/api';
 
 export const userResolvers: IResolvers = {
   Query: {
+    authUrl: (): GoogleAuthCode => {
+      try {
+        return {
+          code: Google.authUrl
+        }
+      } catch (error) {
+        throw new Error(`Failed to query Google Auth Url: ${error}`);
+      }
+    },
     user: async (_root: undefined, { id }: UserArgs, { db, req }: { db: Database, req: Request }): Promise<User> => {
       try {
         const user = await db.users.findOne({ _id: new ObjectId(id) });
@@ -115,6 +125,89 @@ export const userResolvers: IResolvers = {
     ): Promise<UserCredentials | undefined> => { 
       const token = crypto.randomBytes(16).toString("hex");
       return logInViaCookie(token, db, req, res);
+    },
+    signInWithGoogle: async (
+      _root: undefined, { input: { code } } : GoogleAuthInput, { db, req, res }: { db: Database; req: Request; res: Response }
+    ): Promise<UserCredentials | undefined> => { 
+      const { user } = await Google.logIn(code);
+      const token = crypto.randomBytes(16).toString("hex");
+      
+      if (!user) {
+        throw new Error("Google login error");
+      }
+    
+      // Name/Photo/Email Lists
+      const userNamesList = user.names && user.names.length ? user.names : null;
+      const userPhotosList = user.photos && user.photos.length ? user.photos : null;
+      const userEmailsList =
+        user.emailAddresses && user.emailAddresses.length
+          ? user.emailAddresses
+          : null;
+    
+      // User Display Name
+      const userName = userNamesList ? userNamesList[0].displayName : null;
+    
+      // User Id
+      const userId =
+        userNamesList &&
+        userNamesList[0].metadata &&
+        userNamesList[0].metadata.source
+          ? userNamesList[0].metadata.source.id
+          : null;
+    
+      // User Avatar
+      const userAvatar =
+        userPhotosList && userPhotosList[0].url ? userPhotosList[0].url : null;
+    
+      // User Email
+      const userEmail =
+        userEmailsList && userEmailsList[0].value ? userEmailsList[0].value : null;
+    
+      if (!userId || !userName || !userAvatar || !userEmail) {
+        throw new Error("Google login error");
+      }
+    
+      const updateRes = await db.users.findOneAndUpdate(
+        { _id: userId },
+        {
+          $set: {
+            name: userName,
+            avatar: userAvatar,
+            contact: userEmail,
+            token
+          }
+        },
+        { returnOriginal: false }
+      );
+    
+      let authUser = updateRes.value;
+      
+      if (!authUser) {
+        const name = userName.split(" "); 
+        const insertResult = await db.users.insertOne({
+          _id: userId,
+          firstname: name[0],
+          lastname: name[1],
+          avatar: userAvatar,
+          email: userEmail,
+          bootcamps: [],
+          reviews: [],
+          isAdmin: false,
+          token
+        });
+    
+        authUser = insertResult.ops[0];
+      }
+    
+      res.cookie("data", userId, {
+        ...cookieOptions,
+        maxAge: 365 * 24 * 60 * 60 * 1000
+      });
+    
+      return {
+        id: authUser._id.toString(),
+        token
+      };
     },
     signOut: (
       _root: undefined,

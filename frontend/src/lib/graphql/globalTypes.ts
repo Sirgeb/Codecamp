@@ -7,6 +7,10 @@
 // START Enums and Input Objects
 //==============================================================
 
+export interface GoogleAuthInput {
+  code: string;
+}
+
 export interface SignInInput {
   email: string;
   password: string;

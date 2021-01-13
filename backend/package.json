@@ -9,7 +9,7 @@
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "googleapis": "^49.0.0",
+    "googleapis": "^67.0.0",
     "graphql": "^14.6.0",
     "lodash.merge": "^4.6.2",
     "mongodb": "^3.5.5"

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useMutation } from '@apollo/client';
-import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import Container from '@material-ui/core/Container';
 import { signInWithCookies as SignInData } from './lib/graphql/mutations/SignInWithCookies/__generated__/signInWithCookies';
 import { SIGN_IN_WITH_COOKIES } from './lib/graphql/mutations';
@@ -27,7 +27,6 @@ const LoggedInRoutes = () => (
     <Route exact path="/bootcamp-application-form" component={BootcampApplicationFormPage} />
     <Route exact path="/search" component={SearchPage} />
     <Route exact path="/profile" component={ProfilePage} />
-    <Redirect from="*" to="/" />
   </Switch>
 );
 
@@ -38,11 +37,10 @@ const LoggedOutRoutes = () => (
     <Route exact path="/bootcamps" component={BootcampsPage} />
     <Route exact path="/bootcamp-application-form" component={BootcampApplicationFormPage} />
     <Route exact path="/search" component={SearchPage} />
-    <Route exact path="/signin" component={SignInPage} />
+    <Route exact path="/login" component={SignInPage} />
     <Route exact path="/signup" component={SignUpPage} />
     <Route exact path="/forgot-password" component={ForgotPasswordPage} />
     <Route exact path="/change-password" component={ChangePasswordPage} />
-    <Redirect from="*" to="/" />
   </Switch>
 );
 
@@ -54,8 +52,7 @@ const App = () => {
       if (data && data.signInWithCookies) {
         setLoggedInUserId(data.signInWithCookies.id);
         if (data.signInWithCookies.token) {
-          sessionStorage.setItem("token", data.signInWithCookies.token.toString() || " ");
-          console.log("logged in with cookies");
+          sessionStorage.setItem("token", data.signInWithCookies.token.toString());
         } else {
           sessionStorage.removeItem("token");
         }

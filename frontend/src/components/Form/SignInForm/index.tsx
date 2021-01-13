@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation } from '@apollo/client';
+import { useHistory } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -10,8 +12,7 @@ import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import CodeIcon from '@material-ui/icons/Code';
-import google_icon from '../../../assets/google_logo.jpg';
-import { Backdroper, Copyright, Alert } from '../../../components';
+import { Backdroper, Copyright, Alert, GoogleSignInButton } from '../../../components';
 import { SIGN_IN_WITH_CREDENTIALS } from '../../../lib/graphql/mutations';
 import { signInWithCredentials as SignInData, signInWithCredentialsVariables as SignInVariables } from '../../../lib/graphql/mutations/SignIn/__generated__/signInWithCredentials';
 import { useSetLoggedInUserId } from '../../../hooks';
@@ -23,6 +24,7 @@ const INITIAL_STATE = {
 
 export const SignInForm = () => {
   const classes = useStyles();
+  const history = useHistory();
   const setLoggedInUserId = useSetLoggedInUserId();
   const [user, setUser] = useState(INITIAL_STATE);
   const [signIn, { loading, error }] = useMutation<SignInData, SignInVariables>(SIGN_IN_WITH_CREDENTIALS, {
@@ -30,6 +32,8 @@ export const SignInForm = () => {
       if (data && data.signInWithCredentials) {
         setLoggedInUserId(data.signInWithCredentials.id)
         sessionStorage.setItem("token", data.signInWithCredentials.token);
+        toast.success("Signed In Successfully", { autoClose: 2000 });
+        history.push("/");
       } else {
         sessionStorage.removeItem("token");
       }
@@ -46,13 +50,17 @@ export const SignInForm = () => {
 
   const handleSubmit = async (event: React.SyntheticEvent) => {
     event.preventDefault();
-    await signIn({
-      variables: {
-        input: {
-          ...user
+    try {
+      await signIn({
+        variables: {
+          input: {
+            ...user
+          }
         }
-      }
-    })
+      });
+    } catch (e) {
+      toast.error("Error!", { autoClose: 2000 });
+    }
   }
 
   const errorElement = error ? (
@@ -106,13 +114,7 @@ export const SignInForm = () => {
             Sign In
           </Button>
           <Typography className="row center" variant="subtitle2">OR</Typography>
-          <Button 
-            variant="outlined" 
-            fullWidth
-            color="primary"
-          >
-            <img src={google_icon} className={classes.img} alt="google icon" /> &nbsp; Sign in with Google
-          </Button>
+          <GoogleSignInButton />
           <br /><br />
           <Grid container>
             <Grid item xs>

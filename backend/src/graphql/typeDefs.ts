@@ -17,6 +17,10 @@ export const typeDefs = gql`
     token: String!
   }
 
+  type GoogleAuthCode {
+    code: String!
+  }
+
   type Bootcamp {
     id: ID!
     title: String!
@@ -63,13 +67,19 @@ export const typeDefs = gql`
     password: String!
   }
 
+  input GoogleAuthInput {
+    code: String!
+  }
+
   type Query {
-    user(id: ID!): User! 
+    user(id: ID!): User!
+    authUrl: GoogleAuthCode!
   }
 
   type Mutation {
-    signUpWithCredentials(input: SignUpInput): UserCredentials!
-    signInWithCredentials(input: SignInInput): UserCredentials!
+    signUpWithCredentials(input: SignUpInput!): UserCredentials!
+    signInWithCredentials(input: SignInInput!): UserCredentials!
+    signInWithGoogle(input: GoogleAuthInput!): UserCredentials!
     signInWithCookies: UserCredentials!
     signOut: Boolean!
   }

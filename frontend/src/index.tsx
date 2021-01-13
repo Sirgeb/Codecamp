@@ -2,11 +2,14 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { ApolloProvider } from '@apollo/client';
+import { toast } from 'react-toastify';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 import { AppContext, useMode } from './hooks';
 import { client } from './lib';
-import 'fontsource-roboto'
+import 'fontsource-roboto';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import App from './App';
 import './index.css';
 
@@ -42,6 +45,7 @@ ReactDOM.render(
     <AppContext>
       <AppWithTheme />
     </AppContext>
+    <ToastContainer position={toast.POSITION.BOTTOM_CENTER} />
   </ApolloProvider>,
   document.getElementById('root')
 );

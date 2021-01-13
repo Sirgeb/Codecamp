@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { useMutation } from '@apollo/client';
-import { Backdroper, Alert } from '../../../components';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -11,10 +11,10 @@ import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import CodeIcon from '@material-ui/icons/Code';
+import { toast } from 'react-toastify';
 import { SIGN_UP_WITH_CREDENTIALS } from '../../../lib/graphql/mutations';
 import { signUpWithCredentials as SignUpData, signUpWithCredentialsVariables as SignUpVariables } from '../../../lib/graphql/mutations/SignUp/__generated__/signUpWithCredentials';
-import google_icon from '../../../assets/google_logo.jpg';
-import { Copyright } from '../../Copyright';
+import { Backdroper, Alert, GoogleSignInButton, Copyright } from '../../../components';
 import { useSetLoggedInUserId } from '../../../hooks';
 
 const INITIAL_STATE = {
@@ -26,6 +26,7 @@ const INITIAL_STATE = {
 
 export const SignUpForm = () => {
   const classes = useStyles();
+  const history = useHistory();
   const setLoggedInUserId = useSetLoggedInUserId();
   const [user, setUser] = useState(INITIAL_STATE);
   const [signUp, { loading, error }] = useMutation<SignUpData, SignUpVariables>(SIGN_UP_WITH_CREDENTIALS, {
@@ -33,6 +34,8 @@ export const SignUpForm = () => {
       if (data && data.signUpWithCredentials) {
         setLoggedInUserId(data.signUpWithCredentials.id)
         sessionStorage.setItem("token", data.signUpWithCredentials.token);
+        toast.success("Signed Up Successfully", { autoClose: 2000 });
+        history.push("/");
       } else {
         sessionStorage.removeItem("token");
       }
@@ -49,13 +52,17 @@ export const SignUpForm = () => {
 
   const handleSubmit = async (event: React.SyntheticEvent) => {
     event.preventDefault();
-    await signUp({
-      variables: {
-        input: {
-          ...user
+    try {
+      await signUp({
+        variables: {
+          input: {
+            ...user
+          }
         }
-      }
-    })
+      });
+    } catch (error) {
+      toast.error("Error!", { autoClose: 2000 });
+    }
   }
 
   const errorElement = error ? (
@@ -134,13 +141,7 @@ export const SignUpForm = () => {
             Sign Up
           </Button>
           <Typography className="row center" variant="subtitle2">OR</Typography>
-          <Button 
-            variant="outlined" 
-            fullWidth
-            color="primary"
-          >
-            <img src={google_icon} className={classes.img} alt="google icon" /> &nbsp; Sign in with Google
-          </Button>
+          <GoogleSignInButton />
           <br /><br />
           <Grid container>
             <Grid item xs>
@@ -150,7 +151,7 @@ export const SignUpForm = () => {
             </Grid>
             <Grid item>
               <Typography variant="body2" color="primary">
-                <Link to="/signin" className="link-text">Already have an account? Sign in</Link>
+                <Link to="/login" className="link-text">Already have an account? Sign in</Link>
               </Typography>
             </Grid>
           </Grid>
@@ -178,9 +179,5 @@ const useStyles = makeStyles((theme) => ({
   },
   submit: {
     margin: theme.spacing(3, 0, 2),
-  },
-  img: {
-    width: 20, 
-    height: 20
   }
 }));

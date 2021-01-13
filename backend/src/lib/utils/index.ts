@@ -25,13 +25,22 @@ export const logInViaCookie = async (
   req: Request,
   res: Response
 ): Promise<UserCredentials | undefined> => {
+  let userId;
+  const isValid = ObjectId.isValid(req.signedCookies.data);
+
+  if (!isValid) {
+    userId = req.signedCookies.data;
+  } else {
+    userId = new ObjectId(req.signedCookies.data);
+  }
+
   const updateRes = await db.users.findOneAndUpdate(
-    { _id: new ObjectId(req.signedCookies.data) },
+    { _id: userId },
     { $set: { token } },
     { returnOriginal: false }
   );
 
-  let authUser = updateRes.value;
+  const authUser = updateRes.value;
 
   if (!authUser) {
     res.clearCookie("data", cookieOptions);

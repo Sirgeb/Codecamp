@@ -17,3 +17,13 @@ export interface SignInArgs {
     password: string; 
   };
 }
+
+export interface GoogleAuthInput {
+  input: {
+    code: string;
+  }
+}
+
+export interface GoogleAuthCode {
+  code: string;
+}

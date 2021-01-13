@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { useMutation } from '@apollo/client';
+import { toast } from 'react-toastify';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import AppBar from '@material-ui/core/AppBar';
@@ -33,13 +34,14 @@ export const Navigation = () => {
       if (data && data.signOut) {
         setLoggedInUserId(data.signOut);
         sessionStorage.removeItem("token");
+        window.location.href = "/";
       }
     }
   });
 
   const handleSignOut = () => {
     signOut();
-    window.location.href = "/";
+    toast.info("Signed Out Successfully", { autoClose: 2000 });
   }
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -131,7 +133,7 @@ export const Navigation = () => {
                   open={open}
                   onClose={handleLink}
                 >
-                  <MenuItem color="secondary" onClick={() => handleLink('/signin')}>Sign In</MenuItem>
+                  <MenuItem color="secondary" onClick={() => handleLink('/login')}>Sign In</MenuItem>
                   <MenuItem color="secondary" onClick={() => handleLink('/signup')}>Sign Up</MenuItem>
                 </Menu>
               </>

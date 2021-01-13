@@ -43,6 +43,22 @@
             },
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "authUrl",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "GoogleAuthCode",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "inputFields": null,
@@ -748,6 +764,33 @@
       },
       {
         "kind": "OBJECT",
+        "name": "GoogleAuthCode",
+        "description": null,
+        "fields": [
+          {
+            "name": "code",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "Mutation",
         "description": null,
         "fields": [
@@ -759,9 +802,13 @@
                 "name": "input",
                 "description": null,
                 "type": {
-                  "kind": "INPUT_OBJECT",
-                  "name": "SignUpInput",
-                  "ofType": null
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "SignUpInput",
+                    "ofType": null
+                  }
                 },
                 "defaultValue": null
               }
@@ -786,9 +833,44 @@
                 "name": "input",
                 "description": null,
                 "type": {
-                  "kind": "INPUT_OBJECT",
-                  "name": "SignInInput",
-                  "ofType": null
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "SignInInput",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "UserCredentials",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "signInWithGoogle",
+            "description": null,
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "GoogleAuthInput",
+                    "ofType": null
+                  }
                 },
                 "defaultValue": null
               }
@@ -971,6 +1053,31 @@
           },
           {
             "name": "password",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "GoogleAuthInput",
+        "description": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "code",
             "description": null,
             "type": {
               "kind": "NON_NULL",
