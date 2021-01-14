@@ -18,11 +18,11 @@ export const GoogleSignInButton = () => {
       if (data && data.signInWithGoogle.token) {
         setLoggedInUserId(data.signInWithGoogle.id);
         sessionStorage.setItem("token", data.signInWithGoogle.token);
-        toast.success("Signed In Successfully", { autoClose: 2000 });
+        toast.info("Signed In Successfully", { autoClose: 2000, className: 'toastify-info' });
         window.location.href = "/";
       } else {
         sessionStorage.removeItem("token");
-        toast.info("Signed Out Successfully", { autoClose: 2000 });
+        toast.info("Error Occured!", { autoClose: 2000, className: 'toastify-info' });
       }
     },
     onError: (error) => {

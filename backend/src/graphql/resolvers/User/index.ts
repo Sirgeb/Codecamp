@@ -1,11 +1,26 @@
 import { IResolvers } from 'apollo-server-express';
 import { Request, Response } from 'express';
 import crypto from "crypto";
+import sgMail from "@sendgrid/mail";
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import { Database, User, UserCredentials } from '../../../lib/types';
-import { SignUpArgs, SignInArgs, UserArgs, GoogleAuthInput, GoogleAuthCode } from './types';
-import { cookieOptions, authorize, logInViaCookie } from '../../../lib/utils';
+import { 
+  SignUpArgs, 
+  SignInArgs, 
+  UserArgs, 
+  ForgotPasswordArg, 
+  GoogleAuthInput, 
+  GoogleAuthCode,
+  ChangePasswordArgs
+} from './types';
+import { 
+  cookieOptions, 
+  authorize, 
+  logInViaCookie,
+  validateId,
+  validateEmail
+} from '../../../lib/utils';
 import { Google } from '../../../lib/api';
 
 export const userResolvers: IResolvers = {
@@ -16,7 +31,7 @@ export const userResolvers: IResolvers = {
           code: Google.authUrl
         }
       } catch (error) {
-        throw new Error(`Failed to query Google Auth Url: ${error}`);
+        throw new Error("Error: Unable to get Google Auth Url");
       }
     },
     user: async (_root: undefined, { id }: UserArgs, { db, req }: { db: Database, req: Request }): Promise<User> => {
@@ -24,7 +39,7 @@ export const userResolvers: IResolvers = {
         const user = await db.users.findOne({ _id: new ObjectId(id) });
 
         if (!user) {
-          throw new Error("user can't be found");
+          throw new Error("Error: User can't be found");
         }
 
         const authUser = await authorize(db, req);
@@ -35,7 +50,7 @@ export const userResolvers: IResolvers = {
 
         return user;
       } catch (error){
-        throw new Error(`Failed to query user: ${error}`);
+        throw new Error("Error: Unable to process user");
       }
     }
   },
@@ -49,16 +64,22 @@ export const userResolvers: IResolvers = {
 
       const { email, password } = input;
 
+      if (!email.trim() || !password.trim()) {
+        throw new Error('Error: All field must be filled')
+      }
+
+      validateEmail(email);
+
       const user = await db.users.findOne({ email });
 
       if (!user) {
-        throw new Error('Unable to login')
+        throw new Error('Error: Unable to login')
       }
   
       const isMatch = await bcrypt.compare(password, user.password as any);
   
       if (!isMatch) {
-        throw new Error('Unable to login');
+        throw new Error('Error: Unable to login');
       }
 
       res.cookie("data", user._id, {
@@ -79,12 +100,10 @@ export const userResolvers: IResolvers = {
       const { firstname, lastname, email, password } = input;
 
       if (!firstname.trim() || !lastname.trim() || !email.trim() || !password.trim()) {
-        throw new Error('All field must be filled')
+        throw new Error('Error: All field must be filled')
       }
       
-      if (!email.match(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
-        throw new Error("Invalid Email")
-      }
+      validateEmail(email);
 
       const user = await db.users.findOne({ email });
 
@@ -92,7 +111,7 @@ export const userResolvers: IResolvers = {
         throw new Error("Email already in use by another user");
       }
 
-      const hashpassword = await bcrypt.hash(password, 8);
+      const hashedpassword = await bcrypt.hash(password, 8);
 
       const token = crypto.randomBytes(16).toString("hex");
 
@@ -102,7 +121,7 @@ export const userResolvers: IResolvers = {
         lastname,
         avatar: "",
         email,
-        password: hashpassword,
+        password: hashedpassword,
         bootcamps: [],
         reviews: [],
         isAdmin: false
@@ -221,10 +240,85 @@ export const userResolvers: IResolvers = {
         throw new Error(`Failed to sign out: ${error}`);
       }
     },
+    forgotPassword: async (
+      _root: undefined,
+      { input }: ForgotPasswordArg,
+      { db, req, res }: { db: Database; req: Request; res: Response }
+    ): Promise<boolean> => {
+      const { email } = input;
+
+      validateEmail(email);
+
+      const user = await db.users.findOne({ email });
+
+      if (!user) {
+        throw new Error("Error: Unable to recover password");
+      }
+ 
+      sgMail.setApiKey(`${process.env.SENDGRID_API_KEY}`);
+      sgMail.send({
+        to: email,
+        from: 'admin@codecamp-sirgeb.herokuapp.com',
+        subject: 'Password Reset Link',
+        html: `
+          <span>
+            We're sorry to hear that you forgot your password. <br /> 
+            Please follow this link to change your password
+          </span>
+          <a href='${process.env.NODE_ENV === 'development' ? 'http://localhost:3000':'https://codecamp-sirgeb.herokuapp.com'}/change-password/${user._id}'>
+            Password Reset Link
+          </a>
+        `
+      });
+
+      return true
+    }, 
+    changePassword:  async (
+      _root: undefined,
+      { input }: ChangePasswordArgs,
+      { db, req, res }: { db: Database; req: Request; res: Response }
+    ): Promise<UserCredentials> => {
+      const token = crypto.randomBytes(16).toString("hex");
+      const { newPassword, newPasswordRepeat, userId } = input;
+
+      if (!newPassword.trim() || !newPasswordRepeat.trim()) {
+        throw new Error('Error: All field must be filled')
+      }
+
+      const hashedpassword = await bcrypt.hash(newPassword, 8);
+
+      const id = validateId(userId);
+      const updateRes = await db.users.findOneAndUpdate(
+        { _id: id },
+        {
+          $set: {
+            token,
+            password: hashedpassword
+          }
+        },
+        { returnOriginal: false }
+      );
+    
+      const user = updateRes.value;
+
+      if (!user) {
+        throw new Error("Unable to Change Password");
+      }
+
+      res.cookie("data", user._id, {
+        ...cookieOptions,
+        maxAge: 365 * 24 * 60 * 60 * 1000
+      });
+
+      return {
+        id: user._id.toString(),
+        token
+      }
+    }
   },
-   User: {
+  User: {
     id: (user: User): string | undefined => {
       return user._id.toString();
     }
-  },
+  }
 }

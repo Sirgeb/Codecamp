@@ -41,7 +41,7 @@ export const Navigation = () => {
 
   const handleSignOut = () => {
     signOut();
-    toast.info("Signed Out Successfully", { autoClose: 2000 });
+    toast.info("Signed Out Successfully", { autoClose: 2000, className: 'toastify-info' });
   }
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {

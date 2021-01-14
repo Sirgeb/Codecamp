@@ -1,38 +1,36 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useMutation } from '@apollo/client';
-import { useHistory } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
-import CssBaseline from '@material-ui/core/CssBaseline';
+import { useParams, useHistory } from 'react-router-dom';
+import { useMutation } from '@apollo/client';
+import { toast } from 'react-toastify';
 import TextField from '@material-ui/core/TextField';
-import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import CodeIcon from '@material-ui/icons/Code';
-import { Backdroper, Copyright, Alert, GoogleSignInButton } from '../../../components';
-import { SIGN_IN_WITH_CREDENTIALS } from '../../../lib/graphql/mutations';
-import { signInWithCredentials as SignInData, signInWithCredentialsVariables as SignInVariables } from '../../../lib/graphql/mutations/SignIn/__generated__/signInWithCredentials';
+import { CHANGE_PASSWORD } from '../../../lib/graphql/mutations';
+import { changePassword as ChangePasswordData, changePasswordVariables as ChangePasswordVariables } from '../../../lib/graphql/mutations/ChangePassword/__generated__/changePassword';
+import { Copyright, Backdroper, Alert } from '../../';
 import { useSetLoggedInUserId } from '../../../hooks';
 
-const INITIAL_STATE = {
-  email: "",
-  password: ""
+const INITIAL_STATE = { 
+  newPassword: "", 
+  newPasswordRepeat: "" 
 }
 
-export const SignInForm = () => {
+export const ChangePasswordForm = () => {
   const classes = useStyles();
   const history = useHistory();
   const setLoggedInUserId = useSetLoggedInUserId();
-  const [user, setUser] = useState(INITIAL_STATE);
-  const [signIn, { loading, error }] = useMutation<SignInData, SignInVariables>(SIGN_IN_WITH_CREDENTIALS, {
+  const params: { id: string } = useParams();
+  const [password, setPassword] = useState(INITIAL_STATE);
+  const [changePassword, { loading, error }] = useMutation<ChangePasswordData, ChangePasswordVariables>(CHANGE_PASSWORD, {
     onCompleted: (data) => {
-      if (data && data.signInWithCredentials) {
-        setLoggedInUserId(data.signInWithCredentials.id)
-        sessionStorage.setItem("token", data.signInWithCredentials.token);
-        toast.info("Signed In Successfully", { autoClose: 2000, className: 'toastify-info' });
+      if (data && data.changePassword) {
+        setLoggedInUserId(data.changePassword.id)
+        sessionStorage.setItem("token", data.changePassword.token);
+        toast.info("Password Changed Successfully", { autoClose: 2000, className: 'toastify-info' });
         history.push("/");
       } else {
         sessionStorage.removeItem("token");
@@ -42,7 +40,7 @@ export const SignInForm = () => {
 
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = (event) => {
     const { value, name } = event.target;
-    setUser((prevState) => ({
+    setPassword((prevState) => ({
       ...prevState,
       [name]: value
     }));
@@ -51,10 +49,11 @@ export const SignInForm = () => {
   const handleSubmit = async (event: React.SyntheticEvent) => {
     event.preventDefault();
     try {
-      await signIn({
+      await changePassword({
         variables: {
           input: {
-            ...user
+            ...password,
+            userId: params.id
           }
         }
       });
@@ -69,13 +68,12 @@ export const SignInForm = () => {
 
   return (
     <Container component="main" maxWidth="xs">
-      <CssBaseline />
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
-          <CodeIcon color="primary" fontSize="large" />
+          <CodeIcon fontSize="large" color="primary" />
         </Avatar>
         <Typography component="h1" variant="h5">
-          Sign In
+          Change Password
         </Typography>
         <form className={classes.form} noValidate onSubmit={handleSubmit}>
           {errorElement}
@@ -84,11 +82,10 @@ export const SignInForm = () => {
             margin="normal"
             required
             fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            autoFocus={true}
+            name="newPassword"
+            label="Password"
+            type="password"
+            id="newPassword"
             onChange={handleChange}
           />
           <TextField
@@ -96,11 +93,10 @@ export const SignInForm = () => {
             margin="normal"
             required
             fullWidth
-            name="password"
-            label="Password"
+            name="newPasswordRepeat"
+            label="Repeat Password"
             type="password"
-            id="password"
-            autoComplete="current-password"
+            id="newPasswordRepeat"
             onChange={handleChange}
           />
           <Button
@@ -108,39 +104,24 @@ export const SignInForm = () => {
             fullWidth
             variant="contained"
             color="primary"
-            disabled={loading}
             className={classes.submit}
           >
-            Sign In
+            Change Password
           </Button>
-          <Typography className="row center" variant="subtitle2">OR</Typography>
-          <GoogleSignInButton />
-          <br /><br />
-          <Grid container>
-            <Grid item xs>
-              <Typography variant="body2">
-                <Link to="/forgot-password" className="link-text">Forgot password?</Link>
-              </Typography>
-            </Grid>
-            <Grid item>
-              <Typography variant="body2" color="primary">
-                <Link to="/signup" className="link-text">Don't have an account? Sign up</Link>
-              </Typography>
-            </Grid>
-          </Grid>
         </form>
       </div>
-      <Copyright />
       <Backdroper open={loading} />
+      <Copyright />
     </Container>
   );
 }
 
 const useStyles = makeStyles((theme) => ({
   paper: {
+    marginTop: theme.spacing(8),
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center', 
+    alignItems: 'center',
   },
   avatar: {
     margin: theme.spacing(1),
@@ -148,13 +129,9 @@ const useStyles = makeStyles((theme) => ({
   },
   form: {
     width: '100%', // Fix IE 11 issue.
-    marginTop: theme.spacing(1),
+    marginTop: theme.spacing(3),
   },
   submit: {
     margin: theme.spacing(3, 0, 2),
   },
-  img: {
-    width: 20, 
-    height: 20
-  }
 }));

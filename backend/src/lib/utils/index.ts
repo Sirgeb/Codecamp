@@ -12,6 +12,23 @@ export const authorize = async (db: Database, req: Request): Promise<User | null
   return user;
 }
 
+export const validateEmail = (email: string): void => {
+  if (!email.match(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)) {
+    throw new Error("Error: Invalid e-mail address");
+  }
+}
+
+export const validateId = (Id: string): string | ObjectId => {
+  let userId;
+  const isValid = ObjectId.isValid(Id);
+
+  if (!isValid) {
+    return userId = Id
+  } else {
+    return userId = new ObjectId(Id);
+  }
+}
+
 export const cookieOptions = {
   httpOnly: true,
   sameSite: true,
@@ -25,15 +42,8 @@ export const logInViaCookie = async (
   req: Request,
   res: Response
 ): Promise<UserCredentials | undefined> => {
-  let userId;
-  const isValid = ObjectId.isValid(req.signedCookies.data);
-
-  if (!isValid) {
-    userId = req.signedCookies.data;
-  } else {
-    userId = new ObjectId(req.signedCookies.data);
-  }
-
+  
+  const userId = validateId(req.signedCookies.data);
   const updateRes = await db.users.findOneAndUpdate(
     { _id: userId },
     { $set: { token } },

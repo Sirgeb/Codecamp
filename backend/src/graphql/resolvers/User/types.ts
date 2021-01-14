@@ -18,6 +18,14 @@ export interface SignInArgs {
   };
 }
 
+export interface ChangePasswordArgs {
+  input: { 
+    newPassword: string; 
+    newPasswordRepeat: string;
+    userId: string;
+  };
+}
+
 export interface GoogleAuthInput {
   input: {
     code: string;
@@ -26,4 +34,8 @@ export interface GoogleAuthInput {
 
 export interface GoogleAuthCode {
   code: string;
+}
+
+export interface ForgotPasswordArg {
+  input: { email: string };
 }

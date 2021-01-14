@@ -42,3 +42,7 @@
   display: flex; 
   justify-content: center;
 }
+
+.toastify-info {
+  background-color: #F58634;
+}

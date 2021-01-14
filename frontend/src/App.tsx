@@ -40,7 +40,7 @@ const LoggedOutRoutes = () => (
     <Route exact path="/login" component={SignInPage} />
     <Route exact path="/signup" component={SignUpPage} />
     <Route exact path="/forgot-password" component={ForgotPasswordPage} />
-    <Route exact path="/change-password" component={ChangePasswordPage} />
+    <Route exact path="/change-password/:id?" component={ChangePasswordPage} />
   </Switch>
 );
 

@@ -8,3 +8,4 @@ export * from './SignUpPage';
 export * from './SearchPage';
 export * from './BootcampApplicationFormPage';
 export * from './ProfilePage';
+export * from './ForgotPasswordPage';

@@ -45,7 +45,7 @@ ReactDOM.render(
     <AppContext>
       <AppWithTheme />
     </AppContext>
-    <ToastContainer position={toast.POSITION.BOTTOM_CENTER} />
+    <ToastContainer position={toast.POSITION.BOTTOM_RIGHT} />
   </ApolloProvider>,
   document.getElementById('root')
 );

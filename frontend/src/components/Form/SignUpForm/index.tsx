@@ -34,7 +34,7 @@ export const SignUpForm = () => {
       if (data && data.signUpWithCredentials) {
         setLoggedInUserId(data.signUpWithCredentials.id)
         sessionStorage.setItem("token", data.signUpWithCredentials.token);
-        toast.success("Signed Up Successfully", { autoClose: 2000 });
+        toast.info("Signed Up Successfully", { autoClose: 2000, className: 'toastify-info' });
         history.push("/");
       } else {
         sessionStorage.removeItem("token");

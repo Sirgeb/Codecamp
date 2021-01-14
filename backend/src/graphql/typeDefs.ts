@@ -71,6 +71,16 @@ export const typeDefs = gql`
     code: String!
   }
 
+  input ForgotPasswordInput { 
+    email: String!
+  }
+
+  input ChangePasswordInput { 
+    newPassword: String!
+    newPasswordRepeat: String!
+    userId: String!
+  }
+
   type Query {
     user(id: ID!): User!
     authUrl: GoogleAuthCode!
@@ -82,5 +92,7 @@ export const typeDefs = gql`
     signInWithGoogle(input: GoogleAuthInput!): UserCredentials!
     signInWithCookies: UserCredentials!
     signOut: Boolean!
+    forgotPassword(input: ForgotPasswordInput!): Boolean!
+    changePassword(input: ChangePasswordInput!): UserCredentials!
   }
 `;

@@ -7,6 +7,16 @@
 // START Enums and Input Objects
 //==============================================================
 
+export interface ChangePasswordInput {
+  newPassword: string;
+  newPasswordRepeat: string;
+  userId: string;
+}
+
+export interface ForgotPasswordInput {
+  email: string;
+}
+
 export interface GoogleAuthInput {
   code: string;
 }
