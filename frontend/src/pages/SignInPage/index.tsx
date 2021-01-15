@@ -10,7 +10,7 @@ export const SignInPage = () => {
       <Meta title="Codecamp | Sign In" />
       <Breadcrumb 
         routes={[
-          { name: "Sign In", path: "/signin" }
+          { name: "Sign In", path: "/login" }
         ]} 
       />
       <SignInForm />

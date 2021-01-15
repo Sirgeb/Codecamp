@@ -46,3 +46,20 @@
 .toastify-info {
   background-color: #F58634;
 }
+
+.titleHolder {
+  text-align: center;
+  position: relative;
+  padding: 0 0 10px;
+}
+
+.titleHolder:after {
+  transform: translateX(-50%);
+  content: '';
+  background: #f44336;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  height: 3px;
+  width: 250px;
+}
